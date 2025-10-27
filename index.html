@@ -148,22 +148,6 @@
     <div id="paint-area">
       <canvas id="paint-canvas" width="3000" height="600"></canvas>
     </div>
-    <script>
-      var shownPrompt = false;
-      var deferredPrompt = null;
-      window.addEventListener("beforeinstallprompt", (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        deferredPrompt.prompt();
-      });
-      window.addEventListener("mousedown", () => {
-        if (deferredPrompt && !shownPrompt) {
-          deferredPrompt.prompt();
-          deferredPrompt = null;
-          shownPrompt = true;
-        }
-      });
-    </script>
     <script src="index.js?n=1"></script>
     <script src="online.js?n=1"></script>
   </body>

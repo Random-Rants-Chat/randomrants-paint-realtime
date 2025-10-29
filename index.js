@@ -627,8 +627,7 @@ setInterval(() => {
         ctx.moveTo(lastPos.x, lastPos.y);
       }
       rect = null;
-    }
-    if (currentMode == "rect") {
+    } else if (currentMode == "rect") {
       if (down) {
         ctx.clearRect(0, 0, paintCVS.width, paintCVS.height);
         ctx.drawImage(rect.img, 0, 0, paintCVS.width, paintCVS.height);
@@ -677,10 +676,7 @@ setInterval(() => {
           ]);
         }
       }
-    } else {
-      outlineRectPlaced = true;
-    }
-    if (currentMode == "circle") {
+    } else if (currentMode == "circle") {
       if (down) {
         ctx.clearRect(0, 0, paintCVS.width, paintCVS.height);
         ctx.drawImage(circle.img, 0, 0, paintCVS.width, paintCVS.height);
@@ -1285,7 +1281,7 @@ if (websocketURLParam) {
         betterLineto(part[1], part[2], part[3], part[4], part[5], part[6]);
       }
       if (part[0] == "drawCircle") {
-        betterLineto(part[1], part[2], part[3], part[4], part[5], part[6]);
+        drawCircle(part[1], part[2], part[3], part[4], part[5], part[6]);
       }
       if (part[0] == "strokeRect") {
         ctx.strokeRect(part[1], part[2], part[3], part[4]);

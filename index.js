@@ -634,6 +634,13 @@ setInterval(() => {
         ctx.drawImage(rect.img, 0, 0, paintCVS.width, paintCVS.height);
         rect.width = Math.round(pos.x - rect.x);
         rect.height = Math.round(pos.y - rect.y);
+        if (isShiftDown) {
+          const dx = Math.abs(pos.x - rect.x);
+          const dy = Math.abs(pos.y - rect.y);
+          const maxDisplacement = Math.max(dx, dy);
+          rect.width = pos.x < rect.x ? -maxDisplacement : maxDisplacement;
+          rect.height = pos.y < rect.y ? -maxDisplacement : maxDisplacement;
+        }
         ctx.fillRect(
           Math.round(rect.x),
           Math.round(rect.y),
@@ -648,6 +655,13 @@ setInterval(() => {
           ctx.drawImage(rect.img, 0, 0, paintCVS.width, paintCVS.height);
           rect.width = Math.round(pos.x - rect.x);
           rect.height = Math.round(pos.y - rect.y);
+          if (isShiftDown) {
+            const dx = Math.abs(pos.x - rect.x);
+            const dy = Math.abs(pos.y - rect.y);
+            const maxDisplacement = Math.max(dx, dy);
+            rect.width = pos.x < rect.x ? -maxDisplacement : maxDisplacement;
+            rect.height = pos.y < rect.y ? -maxDisplacement : maxDisplacement;
+          }
           ctx.fillRect(
             Math.round(rect.x),
             Math.round(rect.y),
@@ -1268,6 +1282,9 @@ if (websocketURLParam) {
         ctx.clearRect(part[1], part[2], part[3], part[4]);
       }
       if (part[0] == "betterLineto") {
+        betterLineto(part[1], part[2], part[3], part[4], part[5], part[6]);
+      }
+      if (part[0] == "drawCircle") {
         betterLineto(part[1], part[2], part[3], part[4], part[5], part[6]);
       }
       if (part[0] == "strokeRect") {

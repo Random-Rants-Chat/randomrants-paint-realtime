@@ -1118,10 +1118,8 @@ setInterval(() => {
   }
 }, 1);
 erase.onclick = function () {
-  if (window.confirm("Erase all?")) {
-    ctx.clearRect(0, 0, paintCVS.width, paintCVS.height);
-    realtimeActionHistory.push(["eraseAll"]);
-  }
+  ctx.clearRect(0, 0, paintCVS.width, paintCVS.height);
+  realtimeActionHistory.push(["eraseAll"]);
 };
 var controlHeld = false;
 document.addEventListener("keyup", (event) => {

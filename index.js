@@ -104,6 +104,7 @@ var pos = {
   y: 0,
 };
 var rect = null;
+var circle = null;
 var mouse = true;
 
 function radToDeg(rad) {
@@ -132,13 +133,13 @@ function betterLineto(sx, sy, x, y, thickness, color) {
   var lx = Math.round(sx);
   var ly = Math.round(sy);
   var m = 0;
+  ctx.fillStyle = color;
 
   //To fix the fill, make the line pixelated.
   while (
     !(Math.round(x) == Math.round(lx) && Math.round(y) == Math.round(ly)) &&
     m < 3300
   ) {
-    ctx.fillStyle = color;
     var dir = getDirectionFromPoints(x, y, lx, ly);
     var vel = velocityInDir(1, dir);
     ctx.fillRect(
@@ -156,6 +157,31 @@ function betterLineto(sx, sy, x, y, thickness, color) {
       Math.round(thickness)
     );
     m += 1;
+  }
+}
+
+function drawCircle(
+  circleX,
+  circleY,
+  circleWidth = 1,
+  circleHeight = 1,
+  thickness = 1,
+  color = "#000000"
+) {
+  var x = circleX + circleWidth / 2;
+  var y = circleY + circleHeight / 2;
+  var angle = 0;
+  var drawX = Math.round(x + (Math.sin(degToRad(angle)) * circleWidth) / 2);
+  var drawY = Math.round(y + (Math.cos(degToRad(angle)) * circleHeight) / 2);
+  var lastX = drawX;
+  var lastY = drawY;
+  while (angle < 360) {
+    angle += 3;
+    var drawX = Math.round(x + (Math.sin(degToRad(angle)) * circleWidth) / 2);
+    var drawY = Math.round(y + (Math.cos(degToRad(angle)) * circleHeight) / 2);
+    betterLineto(lastX, lastY, drawX, drawY, thickness, color);
+    lastX = drawX;
+    lastY = drawY;
   }
 }
 
@@ -277,6 +303,14 @@ function mouseDownFunctions() {
     data.src = paintCVS.toDataURL(0, 0, paintCVS.width, paintCVS.height);
     rect.img = data;
   }
+  if (currentMode == "circle") {
+    circle = pos;
+    circle.width = 0;
+    circle.height = 0;
+    var data = document.createElement("img");
+    data.src = paintCVS.toDataURL(0, 0, paintCVS.width, paintCVS.height);
+    circle.img = data;
+  }
   if (currentMode == "outline-rect") {
     rect = pos;
     rect.width = 0;
@@ -294,15 +328,12 @@ function mouseDownFunctions() {
       ctx.measureText(t).width / -2 + pos.x,
       thickness.value / 4 + pos.y
     );
-    realtimeActionHistory.push([
-      "font",
-      ctx.font
-    ]);
+    realtimeActionHistory.push(["font", ctx.font]);
     realtimeActionHistory.push([
       "fillText",
       t,
       ctx.measureText(t).width / -2 + pos.x,
-      thickness.value / 4 + pos.y
+      thickness.value / 4 + pos.y,
     ]);
   }
   if (currentMode == "fill") {
@@ -328,14 +359,16 @@ function mouseDownFunctions() {
         trs,
       ]);
       realtimeActionHistory.push([
-      "floodFill",
-        Math.round(pos.x), Math.round(pos.y), [
-        hexToRgb(color.value).r,
-        hexToRgb(color.value).g,
-        hexToRgb(color.value).b,
-        trs,
-      ]
-    ]);
+        "floodFill",
+        Math.round(pos.x),
+        Math.round(pos.y),
+        [
+          hexToRgb(color.value).r,
+          hexToRgb(color.value).g,
+          hexToRgb(color.value).b,
+          trs,
+        ],
+      ]);
       ctx.putImageData(
         fctx.getImageData(0, 0, fctx.canvas.width, fctx.canvas.height),
         0,
@@ -441,7 +474,17 @@ function loadDrawing() {
     }
   }
 }
-//document.onkeydown = function () {loadDrawing();};
+var isShiftDown = false;
+document.onkeydown = function (e) {
+  if (e.key == "Shift") {
+    isShiftDown = true;
+  }
+};
+document.onkeyup = function (e) {
+  if (e.key == "Shift") {
+    isShiftDown = true;
+  }
+};
 var rel = false;
 
 function componentToHex(c) {
@@ -516,7 +559,11 @@ setInterval(() => {
     }
 
     if (colorActionNeeded) {
-      realtimeActionHistory.push(["color", color.value, Math.round(thickness.value)]);
+      realtimeActionHistory.push([
+        "color",
+        color.value,
+        Math.round(thickness.value),
+      ]);
     }
     if (currentMode == "brush") {
       if (down) {
@@ -613,6 +660,66 @@ setInterval(() => {
             Math.round(rect.y),
             rect.width,
             rect.height,
+          ]);
+        }
+      }
+    } else {
+      outlineRectPlaced = true;
+    }
+    if (currentMode == "circle") {
+      if (down) {
+        ctx.clearRect(0, 0, paintCVS.width, paintCVS.height);
+        ctx.drawImage(circle.img, 0, 0, paintCVS.width, paintCVS.height);
+        circle.width = Math.round(pos.x - circle.x);
+        circle.height = Math.round(pos.y - circle.y);
+        if (isShiftDown) {
+          const dx = Math.abs(pos.x - circle.x);
+          const dy = Math.abs(pos.y - circle.y);
+          const maxDisplacement = Math.max(dx, dy);
+          circle.width = pos.x < circle.x ? -maxDisplacement : maxDisplacement;
+          circle.height = pos.y < circle.y ? -maxDisplacement : maxDisplacement;
+        }
+        drawCircle(
+          Math.round(circle.x),
+          Math.round(circle.y),
+          circle.width,
+          circle.height,
+          +thickness.value || 5,
+          color.value
+        );
+        outlineRectPlaced = false;
+      } else {
+        if (!outlineRectPlaced) {
+          outlineRectPlaced = true;
+          ctx.clearRect(0, 0, paintCVS.width, paintCVS.height);
+          ctx.drawImage(circle.img, 0, 0, paintCVS.width, paintCVS.height);
+          circle.width = Math.round(pos.x - circle.x);
+          circle.height = Math.round(pos.y - circle.y);
+          if (isShiftDown) {
+            const dx = Math.abs(pos.x - circle.x);
+            const dy = Math.abs(pos.y - circle.y);
+            const maxDisplacement = Math.max(dx, dy);
+            circle.width =
+              pos.x < circle.x ? -maxDisplacement : maxDisplacement;
+            circle.height =
+              pos.y < circle.y ? -maxDisplacement : maxDisplacement;
+          }
+          drawCircle(
+            Math.round(circle.x),
+            Math.round(circle.y),
+            circle.width,
+            circle.height,
+            +thickness.value || 5,
+            color.value
+          );
+          realtimeActionHistory.push([
+            "drawCircle",
+            Math.round(circle.x),
+            Math.round(circle.y),
+            circle.width,
+            circle.height,
+            +thickness.value || 5,
+            color.value,
           ]);
         }
       }
@@ -1027,9 +1134,11 @@ async function copyDataURL(dataURL) {
     console.log("Copied image.");
   }
 }
-function doUndo() {
-}
+function doUndo() {}
 document.addEventListener("keydown", (event) => {
+  if (event.key == "Shift") {
+    isShiftDown = true;
+  }
   if (false) {
     var imgd = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
     var index = 0;
@@ -1080,6 +1189,11 @@ document.addEventListener("keydown", (event) => {
     }
     event.preventDefault();
     }*/
+});
+document.addEventListener("keyup", (event) => {
+  if (event.key == "Shift") {
+    isShiftDown = false;
+  }
 });
 window.addEventListener("copy", (event) => {
   if (movePos2.action == 2) {
@@ -1163,22 +1277,22 @@ if (websocketURLParam) {
         ctx.font = part[1];
       }
       if (part[0] == "fillText") {
-        ctx.fillText(part[1],part[2],part[3]);
+        ctx.fillText(part[1], part[2], part[3]);
       }
       if (part[0] == "floodFill") {
         fillCVS.width = paintCVS.width;
-      fillCVS.height = paintCVS.height;
-      fctx.putImageData(
-        ctx.getImageData(0, 0, fctx.canvas.width, fctx.canvas.height),
-        0,
-        0
-      );
-      floodFill(fctx, part[1],part[2],part[3]);
-      ctx.putImageData(
-        fctx.getImageData(0, 0, fctx.canvas.width, fctx.canvas.height),
-        0,
-        0
-      );
+        fillCVS.height = paintCVS.height;
+        fctx.putImageData(
+          ctx.getImageData(0, 0, fctx.canvas.width, fctx.canvas.height),
+          0,
+          0
+        );
+        floodFill(fctx, part[1], part[2], part[3]);
+        ctx.putImageData(
+          fctx.getImageData(0, 0, fctx.canvas.width, fctx.canvas.height),
+          0,
+          0
+        );
       }
       if (part[0] == "eraseAll") {
         ctx.clearRect(0, 0, paintCVS.width, paintCVS.height);
@@ -1197,14 +1311,16 @@ if (websocketURLParam) {
       image.onload = function () {
         paintCVS.width = image.width;
         paintCVS.height = image.height;
-        ctx.drawImage(image,0,0,image.width,image.height);
+        ctx.drawImage(image, 0, 0, image.width, image.height);
       };
     }
     if (json.type == "updateCanvasURL") {
-      socket.send(JSON.stringify({
-        type: "canvasURL",
-        url: paintCVS.toDataURL()
-      }));
+      socket.send(
+        JSON.stringify({
+          type: "canvasURL",
+          url: paintCVS.toDataURL(),
+        })
+      );
     }
   });
 
@@ -1219,9 +1335,9 @@ if (websocketURLParam) {
         })
       );
     }
-  }, 1000/20);
+  }, 1000 / 20);
 } else {
   setInterval(() => {
     realtimeActionHistory = [];
-  }, 1000/20);
+  }, 1000 / 20);
 }

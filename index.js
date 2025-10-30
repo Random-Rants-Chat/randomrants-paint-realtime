@@ -1358,6 +1358,13 @@ if (websocketURLParam) {
     }
   });
 
+  window.addEventListener("message", (e) => {
+    var data = e.data;
+    if (data.type == "RRUserInfo") {
+      displayName = data.displayName;
+    }
+  });
+
   setInterval(() => {
     var action = realtimeActionHistory;
     realtimeActionHistory = [];

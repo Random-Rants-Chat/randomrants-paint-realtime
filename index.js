@@ -1330,7 +1330,7 @@ if (websocketURLParam) {
         img.src = "src/cursor.svg";
         div.append(img);
 
-        var name = document.createElement("span");
+        var span = document.createElement("span");
         span.textContent = cursor[2];
         div.append(span);
 

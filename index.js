@@ -1,4 +1,5 @@
 var paintCVS = document.getElementById("paint-canvas");
+var realtimeCursors = document.getElementById("realtimeCursors");
 var ctx = paintCVS.getContext("2d");
 var zoom = document.getElementById("zoom");
 var thickness = document.getElementById("thickness");
@@ -34,6 +35,7 @@ function updateZoom() {
   paintCVS.style.width = `${paintCVS.width * scale}px`;
   paintCVS.style.height = `${paintCVS.height * scale}px`;
   paintCVS.style.backgroundSize = `${scale * 32}px ${scale * 32}px`;
+  realtimeCursors.style.scale = scale;
   zoom.title = `Zoom: ${scale * 100}%`;
 }
 zoom.max = 2000;
@@ -1311,10 +1313,31 @@ if (websocketURLParam) {
     }
   }
 
+  var displayName = "user" + Date.now();
+
   socket.addEventListener("message", (e) => {
     var json = JSON.parse(e.data);
     if (json.type == "applyActionHistory") {
       doActionHistory(json.history);
+    }
+    if (json.type == "cursors") {
+      Array.from(realtimeCursors.children).forEach((c) => c.remove());
+      json.positions.forEach((cursor) => {
+        var div = document.createElement("div");
+        div.className = "realtimeCursorContainer";
+
+        var img = document.createElement("img");
+        img.src = "src/cursor.svg";
+        div.append(img);
+
+        var name = document.createElement("span");
+        span.textContent = cursor[2];
+        div.append(span);
+
+        div.style.left = cursor[0] + "px";
+        div.style.top = cursor[1] + "px";
+        realtimeCursors.append(div);
+      });
     }
     if (json.type == "canvasURL") {
       var image = document.createElement("img");
@@ -1343,6 +1366,7 @@ if (websocketURLParam) {
         JSON.stringify({
           type: "actionHistory",
           history: action,
+          cursor: [pos.x, pos.y, displayName],
         })
       );
     }

@@ -3,5 +3,14 @@
   "setupTasks": [],
 
   // These tasks can be run from CodeSandbox. Running one will open a log in the app.
-  "tasks": {}
+  "tasks": {
+    "http-server": {
+      "name": "Run http-server",
+      "command": "http-server -c 0",
+      "runAtStart": true,
+      "preview": {
+        "port": 8080
+      }
+    }
+  }
 }

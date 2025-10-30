@@ -68,6 +68,30 @@
         color: white;
         font-weight: bold;
       }
+      #realtimeCursors {
+        position: absolute;
+        transform-origin: top left;
+        pointer-events: none;
+      }
+
+      .realtimeCursorContainer {
+        position: relative;
+        opacity: 0.5;
+        color: black;
+        height: 20px;
+        width: fit-content;
+        top: 50px;
+        left: 0;
+        font-weight: bold;
+        font-size: 20px;
+        display: flex;
+        pointer-events: none;
+      }
+      .realtimeCursorImage {
+        height: 20px;
+        width: 20px;
+        margin-right: 4px;
+      }
     </style>
     <div id="menu-bar" style="display: flex; line-height: 32px">
       <button class="menu-button" id="save">Download</button>
@@ -157,6 +181,7 @@
       <button class="paint-button-1" id="undoButton">Undo</button>
     </div>
     <div id="paint-area">
+      <div id="realtimeCursors" style="width: 3000px; height: 600px"></div>
       <canvas id="paint-canvas" width="3000" height="600"></canvas>
     </div>
     <script src="index.js?n=1"></script>
